@@ -565,5 +565,28 @@ describe RSpec::Snapshot::Matchers do
         end
       end
     end
+
+    context 'inline' do
+      let(:actual) { [1, 2] }
+
+      context 'when the snapshot is present' do
+        it 'checks it out' do
+          expect(actual).to match_inline_snapshot(
+            <<~SNAPSHOT
+              [
+                [0] 1,
+                [1] 2
+              ]
+            SNAPSHOT
+          )
+        end
+      end
+
+      context 'when the snapshot is not present' do
+        it 'checks it out too' do
+          expect(actual).to match_inline_snapshot
+        end
+      end
+    end
   end
 end
