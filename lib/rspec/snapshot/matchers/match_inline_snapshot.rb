@@ -93,18 +93,6 @@ module RSpec
 
           File.write(test_file, @rewriter.rewrite(test_file, maybe_loc, new_lines.join("\n")))
 
-          # new_lines = [
-          #   "#{example_line}(", # assumes no empty parens
-          #   indent('<<~SNAPSHOT', indentation_spaces + 2),
-          #   @actual.split("\n").map { |l| indent(l, indentation_spaces + 4) }.join("\n"),
-          #   indent('SNAPSHOT', indentation_spaces + 2),
-          #   indent(')', indentation_spaces)
-          # ]
-
-          # lines[example_location] = new_lines.join("\n")
-
-          # File.write(test_file, lines.join("\n"))
-
           RSpec.configuration.reporter.message(
             "Inline Snapshot written: #{example_location}"
           )
