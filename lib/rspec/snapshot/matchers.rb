@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rspec/snapshot/matchers/match_snapshot'
+require 'rspec/snapshot/matchers/match_inline_snapshot'
 
 module RSpec
   module Snapshot
@@ -13,6 +14,14 @@ module RSpec
       end
 
       alias snapshot match_snapshot
+
+      def match_inline_snapshot(expected = nil, config = {})
+        MatchInlineSnapshot.new(RSpec.current_example.metadata,
+                                expected,
+                                config)
+      end
+
+      alias inline_snapshot match_inline_snapshot
     end
     # rubocop:enable Style/Documentation
   end
