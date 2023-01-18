@@ -17,7 +17,7 @@ module RSpec
           @config = config
 
           @serializer = serializer_class.new
-          @rewriter = AST::FileRewriter.new(AST::SnapshotUpserter)#.rewrite(file_name, 18527, 'tickles') 
+          @rewriter = AST::FileRewriter.new(AST::SnapshotUpserter)
         end
 
         def matches?(actual)
@@ -76,22 +76,25 @@ module RSpec
           lines = File.read(test_file).split("\n")
           example_line = lines[example_location]
 
-          maybe_loc = lines[...example_location].sum { |l| l.length + 1 } + lines[example_location].index('match_inline_snapshot')
+          matcher_loc = lines[...example_location]
+                        .sum { |l| l.length + 1 } +
+                        lines[example_location].index('match_inline_snapshot')
 
           indentation_spaces = example_line.length - example_line.lstrip.length
-
-
-          # require 'pry'; binding.pry
 
           new_lines = [
             'match_inline_snapshot(',
             indent('<<~SNAPSHOT', indentation_spaces + 2),
-              @actual.split("\n").map { |l| indent(l, indentation_spaces + 4) }.join("\n"),
-              indent('SNAPSHOT', indentation_spaces + 2),
-              indent(')', indentation_spaces)
+            @actual.split("\n").map do |l|
+              indent(l, indentation_spaces + 4)
+            end.join("\n"),
+            indent('SNAPSHOT', indentation_spaces + 2),
+            indent(')', indentation_spaces)
           ]
 
-          File.write(test_file, @rewriter.rewrite(test_file, maybe_loc, new_lines.join("\n")))
+          File.write(test_file,
+                     @rewriter.rewrite(test_file, matcher_loc,
+                                       new_lines.join("\n")))
 
           RSpec.configuration.reporter.message(
             "Inline Snapshot written: #{example_location}"
