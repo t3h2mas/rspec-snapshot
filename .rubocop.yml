@@ -8,7 +8,7 @@ AllCops:
     - "Rakefile"
     - "bin/**/*"
     - "spec/fixtures/**/*"
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.7
 
 Layout/EmptyLinesAroundAttributeAccessor:
   Enabled: true
