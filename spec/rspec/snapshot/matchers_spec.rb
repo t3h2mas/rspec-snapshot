@@ -586,6 +586,10 @@ describe RSpec::Snapshot::Matchers do
         it 'checks it out too' do
           expect(actual).to match_inline_snapshot
         end
+
+        it 'checks it out even with parans' do
+          expect(actual).to match_inline_snapshot()
+        end
       end
     end
   end
