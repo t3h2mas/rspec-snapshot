@@ -11,10 +11,11 @@ module RSpec
       class MatchInlineSnapshot
         attr_reader :actual, :expected
 
-        def initialize(metadata, expected, config)
+        def initialize(metadata:, expected:, call_stack:, config:)
           @metadata = metadata
           @expected = expected
           @config = config
+          @call_stack = call_stack
 
           @serializer = serializer_class.new
           @rewriter = AST::FileRewriter.new(AST::SnapshotUpserter)
@@ -129,7 +130,7 @@ module RSpec
           @example_line_index ||= begin
             full_test_location = File.expand_path(test_file)
             # check the call stack to find the assertion line number
-            location = caller.find do |path|
+            location = @call_stack.find do |path|
               path.split(':').first == full_test_location
             end
 

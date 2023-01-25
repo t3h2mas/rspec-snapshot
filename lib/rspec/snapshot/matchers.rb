@@ -16,12 +16,11 @@ module RSpec
       alias snapshot match_snapshot
 
       def match_inline_snapshot(expected = nil, config = {})
-        MatchInlineSnapshot.new(RSpec.current_example.metadata,
-                                expected,
-                                config)
+        MatchInlineSnapshot.new(meta_data: RSpec.current_example.metadata,
+                                expected: expected,
+                                config: config,
+                                call_stack: caller)
       end
-
-      alias inline_snapshot match_inline_snapshot
     end
     # rubocop:enable Style/Documentation
   end
