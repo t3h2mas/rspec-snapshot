@@ -3,6 +3,8 @@
 require 'pry'
 require 'simplecov'
 
+require_relative './shared_examples/snapshot_matcher_spec'
+
 SimpleCov.start do
   enable_coverage :branch
 
