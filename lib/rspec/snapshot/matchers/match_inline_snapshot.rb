@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require 'rspec/snapshot/default_serializer'
-require_relative '../../../../lib/ast/file_rewriter'
-require_relative '../../../../lib/ast/snapshot_upserter'
+require_relative '../../../../lib/inline_snapshot_writer'
 
 module RSpec
   module Snapshot
@@ -18,7 +17,6 @@ module RSpec
           @call_stack = call_stack
 
           @serializer = serializer_class.new
-          @rewriter = AST::FileRewriter.new(AST::SnapshotUpserter)
         end
 
         def matches?(actual)
@@ -67,67 +65,22 @@ module RSpec
           @serializer.dump(value)
         end
 
-        private def indent(text, level)
-          text.rjust(level + text.length, ' ')
-        end
-
         private def write_snapshot
           return unless should_write?
 
-          lines = File.read(test_file).split("\n")
-
-          start_index = matcher_start_index(lines)
-
-          indentation_level = indentation_spaces(example_line(lines))
-
-          updated_source = update_matcher_source(indentation_level)
-
-          File.write(test_file,
-                     @rewriter.rewrite(test_file, start_index, updated_source))
+          InlineSnapshotWriter.new(test_file, matcher_line_index, @actual).write
 
           RSpec.configuration.reporter.message(
-            "Inline Snapshot written: #{example_line_index + 1}"
+            "Inline Snapshot written: #{matcher_line_index + 1}"
           )
-        end
-
-        private def example_line(lines)
-          lines[example_location]
-        end
-
-        private def matcher_start_index(lines)
-          previous_lines = lines[..example_location - 1]
-          matcher_line_start = previous_lines.sum { |l| l.length + 1 }
-          matcher_start = lines[example_location].index('match_inline_snapshot')
-
-          matcher_line_start + matcher_start
-        end
-
-        private def update_matcher_source(indentation_level)
-          [
-            'match_inline_snapshot(',
-            indent('<<~SNAPSHOT', indentation_level + 2),
-            actual_with_indent(indentation_level + 4),
-            indent('SNAPSHOT', indentation_level + 2),
-            indent(')', indentation_level)
-          ].join("\n")
-        end
-
-        private def actual_with_indent(indentation_level)
-          @actual.split("\n").map do |line|
-            indent(line, indentation_level)
-          end.join("\n")
-        end
-
-        private def indentation_spaces(line)
-          line.length - line.lstrip.length
         end
 
         private def test_file
           @metadata[:file_path]
         end
 
-        private def example_line_index
-          @example_line_index ||= begin
+        private def matcher_line_index
+          @matcher_line_index ||= begin
             full_test_location = File.expand_path(test_file)
             # check the call stack to find the assertion line number
             location = @call_stack.find do |path|

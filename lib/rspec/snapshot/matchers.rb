@@ -16,7 +16,7 @@ module RSpec
       alias snapshot match_snapshot
 
       def match_inline_snapshot(expected = nil, config = {})
-        MatchInlineSnapshot.new(meta_data: RSpec.current_example.metadata,
+        MatchInlineSnapshot.new(metadata: RSpec.current_example.metadata,
                                 expected: expected,
                                 config: config,
                                 call_stack: caller)
