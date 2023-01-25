@@ -4,6 +4,11 @@ require_relative './ast/file_rewriter'
 require_relative './ast/snapshot_upserter'
 
 class InlineSnapshotWriter
+
+  def self.write(test_file_path, matcher_line_index, actual)
+    new(test_file_path, matcher_line_index, actual).write
+  end
+
   def initialize(test_file_path, matcher_line_index, actual)
     @test_file_path = test_file_path
     @matcher_line_index = matcher_line_index

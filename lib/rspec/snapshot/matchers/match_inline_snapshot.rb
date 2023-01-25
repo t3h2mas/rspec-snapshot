@@ -23,14 +23,13 @@ module RSpec
 
           write_snapshot
 
-          # @actual == @expected
           @actual == @expected&.strip
         end
 
         private def write_snapshot
           return unless should_write?
 
-          InlineSnapshotWriter.new(test_file, matcher_line_index, @actual).write
+          InlineSnapshotWriter.write(test_file, matcher_line_index, @actual)
 
           RSpec.configuration.reporter.message(
             "Inline Snapshot written: #{matcher_line_index + 1}"
