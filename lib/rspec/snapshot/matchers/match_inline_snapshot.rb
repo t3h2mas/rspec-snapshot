@@ -125,8 +125,18 @@ module RSpec
           @metadata[:file_path]
         end
 
-        private def example_location
-          @metadata[:location].gsub("#{test_file}:", '').to_i
+        private def example_line_index
+          @example_line_index ||= begin
+            full_test_location = File.expand_path(test_file)
+            # check the call stack to find the assertion line number
+            location = caller.find do |path|
+              path.split(':').first == full_test_location
+            end
+
+            line_no = location.split(':')[1].to_i
+
+            line_no - 1
+          end
         end
 
         private def snapshot_missing?
