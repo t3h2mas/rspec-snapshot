@@ -74,31 +74,51 @@ module RSpec
           return unless should_write?
 
           lines = File.read(test_file).split("\n")
-          example_line = lines[example_location]
 
-          matcher_loc = lines[...example_location]
-                        .sum { |l| l.length + 1 } +
-                        lines[example_location].index('match_inline_snapshot')
+          start_index = matcher_start_index(lines)
 
-          indentation_spaces = example_line.length - example_line.lstrip.length
+          indentation_level = indentation_spaces(example_line(lines))
 
-          new_lines = [
-            'match_inline_snapshot(',
-            indent('<<~SNAPSHOT', indentation_spaces + 2),
-            @actual.split("\n").map do |l|
-              indent(l, indentation_spaces + 4)
-            end.join("\n"),
-            indent('SNAPSHOT', indentation_spaces + 2),
-            indent(')', indentation_spaces)
-          ]
+          updated_source = update_matcher_source(indentation_level)
 
           File.write(test_file,
-                     @rewriter.rewrite(test_file, matcher_loc,
-                                       new_lines.join("\n")))
+                     @rewriter.rewrite(test_file, start_index, updated_source))
 
           RSpec.configuration.reporter.message(
-            "Inline Snapshot written: #{example_location}"
+            "Inline Snapshot written: #{example_line_index + 1}"
           )
+        end
+
+        private def example_line(lines)
+          lines[example_location]
+        end
+
+        private def matcher_start_index(lines)
+          previous_lines = lines[..example_location - 1]
+          matcher_line_start = previous_lines.sum { |l| l.length + 1 }
+          matcher_start = lines[example_location].index('match_inline_snapshot')
+
+          matcher_line_start + matcher_start
+        end
+
+        private def update_matcher_source(indentation_level)
+          [
+            'match_inline_snapshot(',
+            indent('<<~SNAPSHOT', indentation_level + 2),
+            actual_with_indent(indentation_level + 4),
+            indent('SNAPSHOT', indentation_level + 2),
+            indent(')', indentation_level)
+          ].join("\n")
+        end
+
+        private def actual_with_indent(indentation_level)
+          @actual.split("\n").map do |line|
+            indent(line, indentation_level)
+          end.join("\n")
+        end
+
+        private def indentation_spaces(line)
+          line.length - line.lstrip.length
         end
 
         private def test_file
