@@ -2,6 +2,12 @@
 
 require 'spec_helper'
 
+class TestSerializer
+  def self.dump(val)
+    val.to_s.gsub('[', '(').gsub(']', ')')
+  end
+end
+
 describe RSpec::Snapshot::Matchers::MatchInlineSnapshot do
   def build_matcher
     described_class.new(
@@ -20,13 +26,10 @@ describe RSpec::Snapshot::Matchers::MatchInlineSnapshot do
   it_behaves_like 'a snapshot matcher'
 
   describe '.matches?' do
-    let(:serializer) { instance_double(RSpec::Snapshot::DefaultSerializer) }
-
     before do
       allow(RSpec::Snapshot::DefaultSerializer).to(
-        receive(:new).and_return(serializer)
+        receive(:new).and_return(TestSerializer)
       )
-      allow(serializer).to receive(:dump)
 
       class_spy(InlineSnapshotWriter).as_stubbed_const
       class_double(File, expand_path: '/baz/ham').as_stubbed_const
@@ -41,26 +44,28 @@ describe RSpec::Snapshot::Matchers::MatchInlineSnapshot do
     end
 
     describe 'writing the snapshot' do
-      let(:call_stack) { ['/baz/ham:42'] }
-
-      it 'writes the serialized value'
+      let(:call_stack) { ['/baz/ham:43'] }
 
       it 'writes the snapshot if explicitly enabled' do
         allow(ENV).to receive(:[]).with('UPDATE_SNAPSHOTS').and_return('true')
         matcher = build_matcher
 
-        matcher.matches?('foo')
+        matcher.matches?([1])
 
-        expect(InlineSnapshotWriter).to have_received(:write)
+        expect(InlineSnapshotWriter).to have_received(:write).with(
+          metadata[:file_path], 42, '(1)'
+        )
       end
 
       it 'writes the snapshot if the snapshot is missing' do
         matcher = build_matcher
         matcher.instance_variable_set(:@expected, nil)
 
-        matcher.matches?('foo')
+        matcher.matches?([1])
 
-        expect(InlineSnapshotWriter).to have_received(:write)
+        expect(InlineSnapshotWriter).to have_received(:write).with(
+          metadata[:file_path], 42, '(1)'
+        )
       end
 
       it 'does not write the snapshot if already present and not explicitly enabled' do
