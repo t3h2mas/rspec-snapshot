@@ -28,34 +28,43 @@ describe RSpec::Snapshot::Matchers::MatchInlineSnapshot do
       )
       allow(serializer).to receive(:dump)
 
-      class_double(InlineSnapshotWriter).as_stubbed_const
+      class_spy(InlineSnapshotWriter).as_stubbed_const
+      class_double(File, expand_path: '/baz/ham').as_stubbed_const
     end
 
-    context 'when UPDATE_SNAPSHOTS is enabled' do
-      before do
+    describe 'matching the value' do
+      it 'should pass when the values match'
+
+      it 'should pass when stripping the expected matches the actual'
+
+      it 'should not pass when the values do not match'
+    end
+
+    describe 'writing the snapshot' do
+      let(:call_stack) { ['/baz/ham:42'] }
+
+      it 'writes the serialized value'
+
+      it 'writes the snapshot if explicitly enabled' do
         allow(ENV).to receive(:[]).with('UPDATE_SNAPSHOTS').and_return('true')
-      end
+        matcher = build_matcher
 
-      it 'writes a snapshot value' do
+        matcher.matches?('foo')
+
         expect(InlineSnapshotWriter).to have_received(:write)
       end
-    end
 
-    context 'when the snapshot is missing' do
-      let(:expected) { nil }
+      it 'writes the snapshot if the snapshot is missing' do
+        matcher = build_matcher
+        matcher.instance_variable_set(:@expected, nil)
 
-      it 'writes a snapshot value' do
+        matcher.matches?('foo')
+
         expect(InlineSnapshotWriter).to have_received(:write)
       end
-    end
 
-    context 'when the snapshot is present and UPDATE_SNAPSHOT is disabled' do
-      context 'when the snapshot matches' do
-
-      end
-
-      context 'when the snapshot does not match' do
-
+      it 'does not write the snapshot if already present and not explicitly enabled' do
+        expect(InlineSnapshotWriter).not_to have_received(:write)
       end
     end
   end
