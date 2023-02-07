@@ -9,10 +9,10 @@ class TestSerializer
 end
 
 describe RSpec::Snapshot::Matchers::MatchInlineSnapshot do
-  def build_matcher
+  def build_matcher(expected_val = expected)
     described_class.new(
       metadata: metadata,
-      expected: expected,
+      expected: expected_val,
       config: config,
       call_stack: call_stack
     )
@@ -36,11 +36,25 @@ describe RSpec::Snapshot::Matchers::MatchInlineSnapshot do
     end
 
     describe 'matching the value' do
-      it 'should pass when the values match'
+      let(:expected) { 'ham and eggs' }
 
-      it 'should pass when stripping the expected matches the actual'
+      it 'passes when the values match' do
+        matcher = build_matcher
 
-      it 'should not pass when the values do not match'
+        expect(matcher.matches?('ham and eggs')).to be(true)
+      end
+
+      it 'passes when stripping the expected matches the actual' do
+        matcher = build_matcher('ham and eggs   ')
+
+        expect(matcher.matches?('ham and eggs')).to be(true)
+      end
+
+      it 'does not pass when the values do not match' do
+        matcher = build_matcher
+
+        expect(matcher.matches?('ham & eggs')).to be(false)
+      end
     end
 
     describe 'writing the snapshot' do
