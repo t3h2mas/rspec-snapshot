@@ -8,18 +8,32 @@ module RSpec
     # rubocop:disable Style/Documentation
     module Matchers
       def match_snapshot(snapshot_name, config = {})
-        MatchSnapshot.new(RSpec.current_example.metadata,
-                          snapshot_name,
-                          config)
+        directory = RSpec.configuration.snapshot_dir
+        metadata = RSpec.current_example.metadata
+
+        writer = FileSnapshotWriter.new(
+          snapshot_name,
+          directory,
+          metadata
+        )
+
+        reader = FileSnapshotReader.new(
+          snapshot_name,
+          directory
+        )
+
+        SnapshotMatcher.new(config, reader, writer)
       end
 
       alias snapshot match_snapshot
 
       def match_inline_snapshot(expected = nil, config = {})
-        MatchInlineSnapshot.new(metadata: RSpec.current_example.metadata,
-                                expected: expected,
-                                config: config,
-                                call_stack: caller)
+        metadata = RSpec.current_example.metadata
+
+        reader = InlineSnapshotReader.new(expected)
+        writer = YAInlineSnapshotWriter.new(metadata[:file_path], caller)
+
+        SnapshotMatcher.new(config, reader, writer)
       end
     end
     # rubocop:enable Style/Documentation

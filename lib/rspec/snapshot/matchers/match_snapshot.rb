@@ -4,6 +4,67 @@ require 'fileutils'
 require 'rspec/snapshot/default_serializer'
 require_relative './matcher'
 
+class FileSnapshotWriter
+  def initialize(name, directory, metadata)
+    @name = name
+    @directory = directory
+    @metadata = metadata
+  end
+
+  private def snapshot_path
+    @snapshot_path ||= File.join(@directory, "#{@name}.snap")
+  end
+
+  private def create_snapshot_dir
+    return if Dir.exist?(File.dirname(snapshot_path))
+
+    FileUtils.mkdir_p(File.dirname(snapshot_path))
+  end
+
+  private def snapshot_dir
+    if @directory.to_s == 'relative'
+      File.dirname(@metadata[:file_path]) << '/__snapshots__'
+    else
+      @directory
+    end
+  end
+
+  def write(snapshot, force)
+    return unless should_write? || force
+
+    create_snapshot_dir
+
+    RSpec.configuration.reporter.message(
+      "Snapshot written: #{snapshot_path}"
+    )
+    file = File.new(snapshot_path, 'w+')
+    file.write(snapshot)
+    file.close
+  end
+
+  private def should_write?
+    !File.exist?(@snapshot_path)
+  end
+end
+
+class FileSnapshotReader
+  def initialize(name, directory)
+    @name = name
+    @directory = directory
+  end
+
+  def read
+    file = File.new(snapshot_path)
+    value = file.read
+    file.close
+    value
+  end
+
+  private def snapshot_path
+    @snapshot_path ||= File.join(@directory, "#{@name}.snap")
+  end
+end
+
 module RSpec
   module Snapshot
     module Matchers
